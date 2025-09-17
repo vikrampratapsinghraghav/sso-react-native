@@ -76,17 +76,15 @@ export default function App() {
       // Reinitialize MSAL with new config
       const configToUse = configName === 'adcbConfig' ? adcbConfig : myConfig;
       const newPca = new PublicClientApplication({
-        auth: configToUse,
-      });
-
-      await newPca.init();
-      setPca(newPca);
-      setIsInitialized(true);
-
-      console.log("Switched to", configName);
-    } catch (error) {
-      console.log("Error switching config:", error);
-    } finally {
+          auth: configToUse,
+        });
+          system: {
+            allowSignIn: false,
+          },
+          auth: configToUse,
+        const newPca = new PublicClientApplication({
+          auth: configToUse,
+        });
       setIsLoading(false);
     }
   };
