@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { SafeAreaView, Button, Text, View, StyleSheet } from "react-native";
 import PublicClientApplication from "react-native-msal";
 import * as Keychain from 'react-native-keychain';
+import FaceIDExample from "./FaceIDExample";
 
 // Your original configurations
 const myConfig = {
@@ -209,6 +210,10 @@ export default function App() {
       </SafeAreaView>
     );
   }
+
+  // return(
+  //   <FaceIDExample />
+  // )
 
   return (
     <SafeAreaView style={styles.container}>
