@@ -1,1 +1,0 @@
-          <Text style={styles.userText}>Name: {user.account?.name || 'N/A'}</Text>
