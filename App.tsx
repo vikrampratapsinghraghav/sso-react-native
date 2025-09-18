@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, Button, Text, View, StyleSheet } from "react-native";
+import { SafeAreaView, Button, Text, View, StyleSheet, Alert } from "react-native";
 import PublicClientApplication from "react-native-msal";
 import * as Keychain from 'react-native-keychain';
 import FaceIDExample from "./FaceIDExample";
@@ -27,6 +27,9 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentConfig, setCurrentConfig] = useState('myConfig');
   const [pca, setPca] = useState<any>(null);
+
+
+
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -100,12 +103,12 @@ export default function App() {
           title: "Unlock with Face ID",
         },
       });
-  
+
       if (creds) {
         console.log("Face ID prompt should appear now..."); console.log("User fetched:", JSON.parse(creds.password));
         return JSON.parse(creds.password);
       }
-  
+
       return null;
     } catch (error) {
       console.log("Error fetching keychain data:", error);
@@ -126,7 +129,7 @@ export default function App() {
             subtitle: "Protect your Microsoft login",
             description: "Use Face ID to secure your authentication data",
           },
-        
+
           accessible: Keychain.ACCESSIBLE.WHEN_UNLOCKED,
         }
       );
@@ -146,6 +149,29 @@ export default function App() {
       console.log("Error clearing keychain:", error);
     }
   };
+
+
+  const clientSecret = "process.env.CLIENT_SECRET || """;
+   //Secret ID f283d4bb-22d7-483a-b3b7-c39a313fd865
+
+   // Value -  process.env.CLIENT_SECRET || ""
+  const callOBO = async () => {
+    try {
+      const response = await fetch("http://localhost:4000/obo", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: user?.accessToken }),
+      });
+
+      const data = await response.json();
+      Alert.alert("OBO Result", JSON.stringify(data, null, 2));
+
+    } catch (err) {
+      console.error("OBO call failed:", err);
+    }
+  };
+
+  
 
   const signIn = async () => {
     if (!isInitialized || !pca) {
@@ -203,6 +229,9 @@ export default function App() {
     }
   };
 
+
+
+
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -251,24 +280,30 @@ export default function App() {
               color="#d32f2f"
             />
 
-<Button
-  title="Test Face ID"
-  onPress={async () => {
-    try {
-      const creds = await Keychain.getGenericPassword({
-        service: "com.microsoftlogin.token",
-        authenticationPrompt: { title: "Unlock with Face ID" },
-      });
-      if (creds) {
-        console.log("✅ Unlocked:", creds);
-      } else {
-        console.log("⚠️ No credentials found");
-      }
-    } catch (e) {
-      console.log("❌ Face ID failed:", e);
-    }
-  }}
-/>
+            <Button
+              title="Test Face ID"
+              onPress={async () => {
+                try {
+                  const creds = await Keychain.getGenericPassword({
+                    service: "com.microsoftlogin.token",
+                    authenticationPrompt: { title: "Unlock with Face ID" },
+                  });
+                  if (creds) {
+                    console.log("✅ Unlocked:", creds);
+                  } else {
+                    console.log("⚠️ No credentials found");
+                  }
+                } catch (e) {
+                  console.log("❌ Face ID failed:", e);
+                }
+              }}
+            />
+
+            <Button
+              title="Call OBO"
+              onPress={callOBO}
+              color="#1976d2"
+            />
           </View>
         </View>
       ) : (
