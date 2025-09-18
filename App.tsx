@@ -33,7 +33,7 @@ export default function App() {
   const [user, setUser] = useState<any>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [currentConfig, setCurrentConfig] = useState('myConfig');
+  const [currentConfig, setCurrentConfig] = useState('adcbConfig');
   const [pca, setPca] = useState<any>(null);
 
   useEffect(() => {
@@ -49,7 +49,9 @@ export default function App() {
         }
 
         // Initialize MSAL with the appropriate config
-        const configToUse = savedUser?.configUsed === 'adcbConfig' ? adcbConfig : myConfig;
+        // const configToUse = savedUser?.configUsed === 'adcbConfig' ? adcbConfig : myConfig;
+        const configToUse =  adcbConfig ;
+
         const newPca = new PublicClientApplication({
           auth: configToUse,
         });
@@ -57,7 +59,7 @@ export default function App() {
         await newPca.init();
         setPca(newPca);
         setIsInitialized(true);
-        console.log("MSAL initialized successfully with", savedUser?.configUsed || 'myConfig');
+        console.log("MSAL initialized successfully with",  'adcbConfig');
 
       } catch (error) {
         console.log("MSAL initialization failed:", error);
@@ -81,8 +83,11 @@ export default function App() {
       // Switch configuration
       setCurrentConfig(configName);
 
+      
+
       // Reinitialize MSAL with new config
       const configToUse = configName === 'adcbConfig' ? adcbConfig : myConfig;
+      console.log("configName", configToUse)
       const newPca = new PublicClientApplication({
         auth: configToUse,
       });
@@ -178,20 +183,22 @@ export default function App() {
       return;
     }
 
-    try {
-      const accounts = await pca.getAccounts();
-      for (const account of accounts) {
-        await pca.removeAccount(account); // 🔹 removes cached session
-      }
-      console.log("All accounts removed, fresh login required");
-    } catch (err) {
-      console.error("Sign-out error:", err);
-    }
+    // try {
+    //   const accounts = await pca.getAccounts();
+    //   for (const account of accounts) {
+    //     await pca.removeAccount(account); // 🔹 removes cached session
+    //   }
+    //   console.log("All accounts removed, fresh login required");
+    // } catch (err) {
+    //   console.error("Sign-out error:", err);
+    // }
 
     try {
       const result = await pca.acquireToken({
         scopes: [
-          "api://TestMiddleTier/access_as_user",
+          // "api://TestMiddleTier/access_as_user",
+          "api://af741894-4cf8-4656-bbb6-39635fa68589/ek",
+
         ],
         prompt: "consent" 
       });
