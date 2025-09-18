@@ -151,10 +151,7 @@ export default function App() {
   };
 
 
-  const clientSecret = "process.env.CLIENT_SECRET || """;
-   //Secret ID f283d4bb-22d7-483a-b3b7-c39a313fd865
 
-   // Value -  process.env.CLIENT_SECRET || ""
   const callOBO = async () => {
     try {
       const response = await fetch("http://localhost:4000/obo", {
