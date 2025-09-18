@@ -4,17 +4,25 @@ import PublicClientApplication from "react-native-msal";
 import * as Keychain from 'react-native-keychain';
 import FaceIDExample from "./FaceIDExample";
 
-// Your original configurations
+// Environment variables
+const MY_CONFIG_CLIENT_ID = process.env.MY_CONFIG_CLIENT_ID || "799cc90e-7337-4fc8-8340-2a4d260e263f";
+const MY_CONFIG_AUTHORITY = process.env.MY_CONFIG_AUTHORITY || "https://login.microsoftonline.com/common";
+const ADCB_CONFIG_CLIENT_ID = process.env.ADCB_CONFIG_CLIENT_ID || "bba519e0-a2f9-4301-8233-4a687de92607";
+const ADCB_CONFIG_AUTHORITY = process.env.ADCB_CONFIG_AUTHORITY || "https://login.microsoftonline.com/6171e1a1-b822-451c-b9bb-e6e35d88b0db";
+const REDIRECT_URI = process.env.REDIRECT_URI || "msauth.org.reactjs.native.example.MicrosoftLogin://auth";
+const OBO_SERVER_URL = process.env.OBO_SERVER_URL || "http://localhost:4000/obo";
+
+// Your configurations using environment variables
 const myConfig = {
-  clientId: "799cc90e-7337-4fc8-8340-2a4d260e263f",
-  redirectUri: "msauth.org.reactjs.native.example.MicrosoftLogin://auth",
-  authority: "https://login.microsoftonline.com/common",
+  clientId: MY_CONFIG_CLIENT_ID,
+  redirectUri: REDIRECT_URI,
+  authority: MY_CONFIG_AUTHORITY,
 };
 
 const adcbConfig = {
-  clientId: "bba519e0-a2f9-4301-8233-4a687de92607",
-  redirectUri: "msauth.org.reactjs.native.example.MicrosoftLogin://auth",
-  authority: "https://login.microsoftonline.com/6171e1a1-b822-451c-b9bb-e6e35d88b0db",
+  clientId: ADCB_CONFIG_CLIENT_ID,
+  redirectUri: REDIRECT_URI,
+  authority: ADCB_CONFIG_AUTHORITY,
 }
 
 // Keychain constants
@@ -27,9 +35,6 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentConfig, setCurrentConfig] = useState('myConfig');
   const [pca, setPca] = useState<any>(null);
-
-
-
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -150,11 +155,10 @@ export default function App() {
     }
   };
 
-
-
   const callOBO = async () => {
     try {
-      const response = await fetch("http://localhost:4000/obo", {
+      console.log("user?.accessToken", user?.accessToken)
+      const response = await fetch(OBO_SERVER_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: user?.accessToken }),
@@ -168,8 +172,6 @@ export default function App() {
     }
   };
 
-  
-
   const signIn = async () => {
     if (!isInitialized || !pca) {
       console.log("MSAL not initialized yet");
@@ -177,10 +179,23 @@ export default function App() {
     }
 
     try {
-      const result = await pca.acquireToken({
-        scopes: ["User.Read"],
-      });
+      const accounts = await pca.getAccounts();
+      for (const account of accounts) {
+        await pca.removeAccount(account); // 🔹 removes cached session
+      }
+      console.log("All accounts removed, fresh login required");
+    } catch (err) {
+      console.error("Sign-out error:", err);
+    }
 
+    try {
+      const result = await pca.acquireToken({
+        scopes: [
+          "api://TestMiddleTier/access_as_user",
+        ],
+        prompt: "consent" 
+      });
+      
       if (result && result.account) {
         console.log("Login successful:", result);
 
@@ -226,9 +241,6 @@ export default function App() {
     }
   };
 
-
-
-
   if (isLoading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -236,10 +248,6 @@ export default function App() {
       </SafeAreaView>
     );
   }
-
-  // return(
-  //   <FaceIDExample />
-  // )
 
   return (
     <SafeAreaView style={styles.container}>
