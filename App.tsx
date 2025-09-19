@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { SafeAreaView, Button, Text, View, StyleSheet, Alert } from "react-native";
+import { SafeAreaView, Button, Text, View, StyleSheet, Alert, Modal, TouchableOpacity } from "react-native";
 import PublicClientApplication from "react-native-msal";
 import * as Keychain from 'react-native-keychain';
+import { WebView } from 'react-native-webview';
 import FaceIDExample from "./FaceIDExample";
 
 // Environment variables
@@ -35,6 +36,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [currentConfig, setCurrentConfig] = useState('adcbConfig');
   const [pca, setPca] = useState<any>(null);
+  const [showWebView, setShowWebView] = useState(false);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -53,7 +55,8 @@ export default function App() {
         const configToUse =  adcbConfig ;
 
         const newPca = new PublicClientApplication({
-          auth: configToUse,
+          // auth: configToUse,
+          auth: myConfig,
         });
 
         await newPca.init();
@@ -177,6 +180,31 @@ export default function App() {
     }
   };
 
+  const openWebView = () => {
+    if (!user?.accessToken || !user?.account?.username) {
+      Alert.alert("Error", "User token or email not available");
+      return;
+    }
+    setShowWebView(true);
+  };
+
+  const getWebViewUrl = () => {
+    if (!user?.accessToken || !user?.account?.username) return '';
+    
+    // You can customize this URL to your needs
+    const baseUrl = "http://localhost:3000"; 
+    const params = new URLSearchParams({
+      token: user.accessToken,
+      email: user.account.username,
+      name: user.account.name || user.account.username,
+      tenantId: user.tenantId || '',
+      expiresOn: user.expiresOn || ''
+    });
+
+    console.log("WebView URL:", `${baseUrl}?${params.toString()}`);
+    return `${baseUrl}?${params.toString()}`;
+  };
+
   const signIn = async () => {
     if (!isInitialized || !pca) {
       console.log("MSAL not initialized yet");
@@ -196,8 +224,9 @@ export default function App() {
     try {
       const result = await pca.acquireToken({
         scopes: [
-          // "api://TestMiddleTier/access_as_user",
-          "api://af741894-4cf8-4656-bbb6-39635fa68589/ek",
+          "api://TestMiddleTier/access_as_user",
+          // "api://af741894-4cf8-4656-bbb6-39635fa68589/ek",
+          // "User.Read"
 
         ],
         prompt: "consent" 
@@ -316,6 +345,17 @@ export default function App() {
               onPress={callOBO}
               color="#1976d2"
             />
+
+<Button
+              title="Test login"
+              onPress={signIn}
+              color="#1976d2"
+            />
+            <Button
+              title="Open WebView"
+              onPress={openWebView}
+              color="#4caf50"
+            />
           </View>
         </View>
       ) : (
@@ -329,6 +369,40 @@ export default function App() {
           />
         </View>
       )}
+
+      {/* Full Screen WebView Modal */}
+      <Modal
+        visible={showWebView}
+        animationType="slide"
+        presentationStyle="fullScreen"
+      >
+        <View style={styles.webViewContainer}>
+          <View style={styles.webViewHeader}>
+            <Text style={styles.webViewTitle}>Web Dashboard</Text>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setShowWebView(false)}
+            >
+              <Text style={styles.closeButtonText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <WebView
+            source={{ uri: getWebViewUrl() }}
+            style={styles.webView}
+            onError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.log('WebView error: ', nativeEvent);
+            }}
+            onHttpError={(syntheticEvent) => {
+              const { nativeEvent } = syntheticEvent;
+              console.log('WebView HTTP error: ', nativeEvent);
+            }}
+            onLoadStart={() => console.log('WebView started loading')}
+            onLoadEnd={() => console.log('WebView finished loading')}
+          />
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -432,5 +506,38 @@ const styles = StyleSheet.create({
   buttonContainer: {
     marginTop: 20,
     width: '100%',
+  },
+  webViewContainer: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  webViewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#1976d2',
+    paddingTop: 50, // Account for status bar
+  },
+  webViewTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  webView: {
+    flex: 1,
   },
 });
