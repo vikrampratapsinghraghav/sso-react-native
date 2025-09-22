@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@react-native/new-app-screen": "0.81.4",
+    "jose": "^6.1.0",
     "jwt-decode": "^4.0.0",
     "react": "19.1.0",
     "react-native": "0.81.4",
+    "react-native-crypto": "^2.2.1",
     "react-native-dotenv": "^3.4.11",
+    "react-native-fs": "^2.20.0",
     "react-native-keychain": "^10.0.0",
     "react-native-msal": "^4.0.4",
     "react-native-safe-area-context": "^5.5.2",
